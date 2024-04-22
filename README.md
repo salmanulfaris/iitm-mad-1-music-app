@@ -2,10 +2,24 @@
 ### Modern Application Development Project
 Author : Salmanul Faris
 
+## Screenshots
+<div style="width: 100%;display: inline-block">
+   <img style="float: left;width: 25%" src="screenshots/screen1.png" alt="IIT Madras MAD 1 Project">
+   <img style="float: left;width: 25%" src="screenshots/screen5.png" alt="IIT Madras MAD 1 Project">
+   <img style="float: left;width: 25%" src="screenshots/screen2.png" alt="IIT Madras MAD 1 Project">
+   <img style="float: left;width: 25%" src="screenshots/screen3.png" alt="IIT Madras MAD 1 Project">
+   <img style="float: left;width: 25%" src="screenshots/screen4.png" alt="IIT Madras MAD 1 Project">
+</div>
+
+
+
+
 >**About Application** 
 > 
 >This is App is developed in flask, using Bootstrap 5 as CSS framework, 
 >and SQLite as Database.
+
+
 
 
 #### Steps to use application
