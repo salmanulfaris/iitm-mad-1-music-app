@@ -1,0 +1,32 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Home {% endblock %}
+
+
+{% block content %}
+    <div class="header w-full h-36 bg-no-repeat bg-cover bg-top hover:bg-blend-hard-light "
+         style="background-image: url('{{ url_for('static',filename='img/bg-img4.jpg') }}');">
+        <div class="container">
+            <h1 class="text-3xl text-center text-white pt-5 font-bold">
+                Create Playlist
+            </h1>
+        </div>
+    </div>
+    <div class="container mt-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-4">
+                <h2 class="text-2xl font-bold mb-3">Create Playlist</h2>
+                <form action="{{ url_for('main.store_playlist') }}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="playlist_name">Playlist Name</label>
+                        <input type="text" name="playlist_name" class="form-control" required>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-primary text-end">Create </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

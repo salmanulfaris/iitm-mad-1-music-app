@@ -1,0 +1,190 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Album {{ album.album_name }} {% endblock %}
+
+
+{% block content %}
+    <div class="header w-full h-36 bg-no-repeat bg-cover bg-top hover:bg-blend-hard-light "
+         style="background-image: url('{{ url_for('static',filename='img/bg-img4.jpg') }}');">
+        <div class="container">
+            <h1 class="text-3xl text-center text-white pt-5 font-bold">
+                Album : {{ album.album_name }}
+            </h1>
+        </div>
+    </div>
+    <div class="container mt-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-3">
+                <div class="border rounded-lg p-4 ">
+                    <div class="w-36 h-36 max-w-40 max-h-40 rounded-2xl mb-2 mx-auto bg-cover bg-yellow-400"
+                         style="background-image: url('{{ url_for('main.serve_file',file=album.thumbnail,folder='talbum') }}');background-size:cover;"></div>
+                    <h2 class="text-2xl font-medium">{{ album.album_name }}</h2>
+                    <hr class="my-2">
+                    <p>Artists : <a class="badge badge-danger"
+                                    href="{{ url_for('creator.profile',creator_id=album.creator_id) }}">{{ album.creator.name }}</a>
+                    </p>
+                    <hr class="my-2">
+                    <p>Total Songs : {{ album.songs | count }}</p>
+                    <hr class="my-2">
+                    <p>Genre: {{ album.genre.genre_name }}</p>
+                    <hr class="my-2">
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="clearfix mb-3">
+                    <div class="float-left">
+                        <button type="button" onclick="playAllSong()" class="btn btn-sm btn-warning text-black"><i
+                                class="bi bi-play"></i> Play All
+                        </button>
+                        <button type="button" onclick="playShuffle()" class="btn btn-sm btn-outline-info"><i
+                                class="bi bi-shuffle"></i> Shuffle Play
+                        </button>
+                        <button onclick="nextSong()" class="btn btn-sm btn-success"><i class="bi bi-fast-forward"></i> Next
+                        </button>
+                    </div>
+                </div>
+
+                {#                {% if selected_playlist | length > 0 %}#}
+                <p class="mb-1"> Songs in {{ album.album_name }}</p>
+                <ul class="list-group">
+                    {% for song in album.songs %}
+                        {% if song.is_active %}
+                            <div class="list-group-item song-list flex justify-between gap-2 px-3"
+                                 data-url="{{ url_for('main.serve_file',file=(song.file_path if song.file_path else ''),folder='song') }}"
+                                 data-lyrics="{{ song.lyrics }}"
+                                 data-id="{{ song.id }}">
+                                <div class="w-16 h-16 bg-cover rounded-sm"
+                                     style="background-image: url('{{ url_for('main.serve_file',folder='tsong',file=song.thumbnail) }}')">
+                                    <img src="" alt="">
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-medium">
+                                        <a href="{{ url_for('main.play_song',song_id=song.id) }}">
+                                            {{ song.title }}
+                                        </a>
+                                    </h3>
+                                           <a class="text-sm" href="{{ url_for('creator.profile',creator_id=song.artist.id) }}">{{ song.artist.name }}</a>
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary play-btn"><i class="bi bi-play"></i></button>
+                                </div>
+                            </div>
+                        {% else %}
+
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                <audio id="music-player" class="d-none" preload controls>
+                    <source src="">
+                </audio>
+
+            </div>
+           <div class="col-lg-5">
+                <h2 class="text-xl font-bold mb-2">Lyrics : </h2>
+                <p class="whitespace-pre text-sm" id="lyrics-body"></p>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        var currentPlayingSrc;
+        var currentPlayingDuration;
+
+        var audio = $("#music-player");
+        var playSrcQueue = [];
+
+        $(".play-btn").click(function () {
+            let parent = $(this).parents('.list-group-item')
+            let url = parent.data('url');
+            if (currentPlayingSrc === url) {
+                if (audio[0].paused) {
+                    $(this).addClass('btn-success').html('<i class="bi bi-pause"></i>')
+                    audio[0].play()
+                } else {
+                    $(this).removeClass('btn-success').html('<i class="bi bi-play"></i>')
+                    audio[0].pause()
+                }
+            } else {
+                playSong(url)
+            }
+            $.post('{{ url_for("main.log_song_play") }}', {song_id: parent.data('id')})
+        });
+
+        audio[0].addEventListener("timeupdate", function () {
+            if (this.duration === this.currentTime) {
+                nextSong()
+            }
+        });
+
+        function resetAllSong() {
+            $('.list-group-item.song-list').each(function () {
+                $(this).find('.play-btn').removeClass('btn-success').html('<i class="bi bi-play"></i>')
+            })
+        }
+
+        function nextSong() {
+            if (playSrcQueue.length > 1) {
+                playSrcQueue.shift()
+                playSong(playSrcQueue[0])
+            } else {
+                playAllSong();
+            }
+        }
+
+        function playAllSong() {
+            playSrcQueue = []
+            $('.list-group-item.song-list').each(function () {
+                playSrcQueue.push($(this).data('url'));
+            })
+            playSong(playSrcQueue[0])
+        }
+
+        function playShuffle() {
+            playSrcQueue = []
+            $('.list-group-item.song-list').each(function () {
+                playSrcQueue.push($(this).data('url'));
+            })
+            playSrcQueue = shuffle(playSrcQueue)
+            playSong(playSrcQueue[0])
+
+        }
+
+        function playSong(url) {
+            currentPlayingSrc = url;
+            currentPlayingDuration = audio[0].duration
+            audio.find('source').attr('src', url);
+
+            {#audio[0].pause();#}
+            audio[0].load();
+            audio[0].oncanplaythrough = audio[0].play();
+
+            resetAllSong();
+
+            $('.list-group-item.song-list').each(function () {
+
+
+                if ($(this).data('url') == url) {
+                    let lyrics = $(this).data('lyrics')
+                    $("#lyrics-body").html(lyrics)
+                    $(this).find('.play-btn').addClass('btn-success').html('<i class="bi bi-pause"></i>')
+                }
+            });
+        }
+
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex > 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+    </script>
+{% endblock %}

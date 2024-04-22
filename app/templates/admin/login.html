@@ -1,0 +1,31 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Login Page {% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-4 drop-shadow-md border rounded bg-white">
+            <div class="px-2 py-4">
+                <h3 class="text-center mt-2 text-3xl font-semibold"> {% include('layout/logo.html') %} Admin Console </h3>
+                <p class="mt-3 text-xl">Login</p>
+                {% include('layout/flash.html') %}
+                <form action="{{ url_for('admin.do_login') }}" method="post">
+                    <div class="form-floating mt-3">
+                        <label for="email">Email address</label>
+                        <input type="email" class="form-control" id="email" name="email"  placeholder="Email">
+                    </div>
+
+                    <div class="form-floating mt-3">
+                        <label for="password">Password</label>
+                        <input type="password" class="form-control" id="password" name="password"  placeholder="Password">
+                    </div>
+                    <div class="mt-2 d-block ">
+                        <button class="btn btn-primary btn-block"> Login as Admin</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

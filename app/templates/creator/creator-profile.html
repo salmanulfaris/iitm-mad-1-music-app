@@ -1,0 +1,175 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+    <div class="header w-full h-36 bg-white bg-no-repeat bg-cover bg-top hover:bg-blend-hard-light transition-all delay-1000 "
+         style="background-image: url('{{ url_for('static',filename='img/bg-img4.jpg') }}');">
+        <div class="container">
+            <h1 class="text-3xl text-center text-white pt-5 font-black ">
+                {{ current_user.name }}, Welcome to Creator Studio
+            </h1>
+        </div>
+    </div>
+    <div class="container mt-3">
+        {% if current_user.user_type!='crtr' %}
+            <div class="alert alert-dark p-5" role="alert">
+                <div>
+                    <h1 class="text-4xl">Ooops..!!</h1>
+                    {% if current_user.user_type == 'user' %}
+                        <h2 class="text-xl mb-2">
+                            You can't access creator studio unless you are a creator !
+                        </h2>
+                        Become a creator and upload musics and albums now. <br>
+                        <a href="{{ url_for('creator.become_creator') }}" onclick="return confirm('Are you sure ?')"
+                           class="btn btn-success decoration-none"><i class="bi bi-person-add  "></i> Register as
+                            Creator</a>
+                    {% else %}
+                        You are an admin, so you can't add songs
+                    {% endif %}
+                </div>
+            </div>
+        {% elif not current_user.is_allowed_to_create %}
+            <div class="alert alert-danger">
+                <h1 class="text-xl">You can't add musics</h1>
+                Your Profile is blacklisted
+            </div>
+        {% else %}
+            <div class="p-5">
+                <div class="row mb-4">
+                    <div class="col-lg-3 border px-3 py-2 rounded">
+                        <h3 class="text-lg font-medium">Total Songs Uploaded</h3>
+                        <h2 class="text-2xl">{{ all_songs | length }}</h2>
+                    </div>
+                    <div class="col-lg-3 border px-3 py-2 rounded">
+                        <h3 class="text-lg font-medium">Total Albums</h3>
+                        <h2 class="text-2xl">{{ albums | length }}</h2>
+                    </div>
+
+                    <div class="col-lg-3 border px-3 py-2 rounded">
+                        <h3 class="text-lg font-medium">Average song Ratings</h3>
+                        <h2 class="text-2xl">{{ 0 if average_rating is none else average_rating | round(2) }} / 5</h2>
+                    </div>
+
+                    <div class="col-lg-3 border px-3 py-2 rounded">
+                        <h3 class="text-lg font-medium">Total Plays</h3>
+                        <h2 class="text-2xl">{{ total_plays }}</h2>
+                    </div>
+                </div>
+
+                <div class="clearfix mb-2">
+                    <div class="float-left">
+                        <h3 class="text-xl mb-2">My Uploads</h3>
+                    </div>
+                    <div class="float-right">
+                        <a href="{{ url_for('creator.add_song') }}" class="btn btn-primary"> <i class="bi bi-plus "></i>
+                            Add New Song</a>
+
+                    </div>
+                </div>
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Song Name</th>
+                        <th>Language</th>
+                        <th>Genre</th>
+                        <th>Album</th>
+                        <th>Plays</th>
+                        <th>Status</th>
+                        <th>Avg. Rating</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for song in (all_songs) %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ song.title }}</td>
+                            <td>{{ song.language.lang_name }}</td>
+                            <td>{{ song.album.genre.genre_name }}</td>
+                            <td>{{ song.album.album_name }}</td>
+                            <td>{{ song.get_total_plays() }}</td>
+                            <td>
+                                {% if song.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-danger">Flagged</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ song.get_average_rating() }}</td>
+                            <td>
+                                <a href="{{ url_for('main.play_song',song_id=song.id) }}"
+                                   class="btn btn-sm btn-success"><i
+                                        class="bi bi-play "></i> Play Song</a>
+                                <a href="{{ url_for('creator.edit_song',song_id=song.id) }}"
+                                   class="btn btn-sm  btn-secondary"><i
+                                        class="bi bi-pen "></i> Edit Song</a>
+                                <a href="{{ url_for('creator.delete_song',song_id=song.id) }}"
+                                   onclick="return confirm('Song will be deleted permanently, are you sure ?')"
+                                   class="btn btn-sm btn-danger"><i class="bi bi-trash "></i> Delete Song</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="clearfix mb-2">
+
+                    <div class="float-left">
+                        <h3 class="text-xl ">My Albums</h3>
+                    </div>
+                    <div class="float-right">
+                        <a href="{{ url_for('creator.add_album') }}" class="btn btn-primary"> <i
+                                class="bi bi-plus "></i> Create New Album</a>
+                    </div>
+                </div>
+
+
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Album</th>
+                        <th>Genre</th>
+                        <th>Total Songs</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for album in albums %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ album.album_name }}</td>
+                            <td>{{ album.genre.genre_name }}</td>
+                            <td>{{ album.songs | length }}</td>
+                            <td>
+                                <a href="{{ url_for('main.view_album',aid=album.album_id) }}"
+                                   class="btn  btn-sm btn-success"><i
+                                        class="bi bi-eye "></i> View Album</a>
+                                <a href="{{ url_for('creator.edit_album',album_id=album.album_id) }}"
+                                   class="btn  btn-sm btn-secondary"><i
+                                        class="bi bi-pen "></i> Edit Album</a>
+                                <a href="{{ url_for('creator.delete_album',album_id=album.album_id) }}"
+                                   onclick="return confirm('Songs belongs to this album also be deleted, are you sure ?')"
+                                   class="btn btn-sm btn-danger"><i class="bi bi-trash "></i> Delete Album</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                <div>
+                    <div class="alert alert-secondary">
+                        <h1>API Token</h1>
+                        <code>{{ current_user.api_token }}</code>
+                        <p>Include in Query Parameter of Request as <code>user_token</code></p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+
+
+
+{% endblock %}

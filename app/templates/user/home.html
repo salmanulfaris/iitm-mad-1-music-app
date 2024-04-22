@@ -1,0 +1,102 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+    <div class="header w-full h-36 bg-white bg-no-repeat bg-cover hover:bg-blend-hard-light text-white  "
+         style="background-image: url('{{ url_for('static',filename='img/bg-img4.jpg') }}');">
+        <div class="container">
+            <h1 class="text-3xl text-center  pt-5">
+                Enjoy The Music
+            </h1>
+        </div>
+    </div>
+    <div class="container mt-3 max-w-7xl pb-10">
+        <div>
+            <h6 class="text-lg">Recently Released Songs</h6>
+            <hr class="my-2">
+            <div class="grid lg:grid-cols-6 md:grid-cols-4 grid-cols-3 justify-items-center">
+                {% for song in songs %}
+                    <div class="col-span-1 mb-3">
+                        <a href="{{ url_for('main.play_song',song_id=song.id) }}">
+                            <div class="flex justify-between">
+                                <div class="flex gap-2 flex-col">
+                                    <div class="music-card bg-black"
+                                         style="background-image: url('{{ url_for('main.serve_file',file=song.thumbnail,folder='tsong') }}');background-size:cover;">
+                                        <i class="bi bi-play-circle-fill play-icon"></i>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="font-normal">
+                                            <p class="text-sm">{{ song.title }}</p>
+                                            <span class="block text-gray-800 font-normal text-sm italic">{{ song.artist.name }} </span>
+                                            <span class="block text-gray-800 font-normal text-xs italic">Album : {{ song.album.album_name }} </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+
+        <div>
+            <h6 class="text-lg mt-3">Top Albums</h6>
+            <hr class="my-2">
+            <div class="grid lg:grid-cols-6 md:grid-cols-4 grid-cols-3 justify-items-center">
+                {% for album in albums %}
+                    <div class="col-span-1 mb-3">
+                        <div class="flex justify-between">
+                            <div class="flex gap-2 flex-col">
+                                <a href="{{ url_for('main.view_album',aid=album.album_id) }}">
+                                <div class="album-card bg-yellow-400"
+                                     style="background-image: url('{{ url_for('main.serve_file',file=album.thumbnail,folder='talbum') }}');background-size:cover;">
+                                    <i class="bi bi-file-earmark-music-fill play-icon"></i>
+                                </div>
+                                <div class="text-center mt-2">
+                                    <div class="font-normal">
+                                        <p class="text-sm">{{ album.album_name }}</p>
+                                        <span class="block text-gray-800  text-xs font-medium italic">{{ album.creator.name }} </span>
+                                    </div>
+                                </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                {% endfor %}
+            </div>
+        </div>
+
+
+            <div>
+            <h6 class="text-lg mt-3">Artists</h6>
+            <hr class="my-2">
+            <div class="grid lg:grid-cols-6 md:grid-cols-4 grid-cols-3 justify-items-center">
+                {% for artist in artists %}
+                    <div class="col-span-1 ">
+                        <div class="flex justify-between">
+                            <div class="flex gap-2 flex-col">
+                                <a href="{{ url_for('creator.profile',creator_id=artist.id) }}">
+                                <div class="album-card bg-gray-400"
+                                     style="background-image: url('{{ url_for('main.serve_file',file=artist.profile_photo_file,folder='tuser') }}');background-size:cover;">
+                                    <i class="bi bi-person-fill play-icon"></i>
+                                </div>
+                                <div class="text-center">
+                                    <div class="font-normal">
+                                        <p class="text-sm">{{ artist.name }}</p>
+                                    </div>
+                                </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                {% endfor %}
+            </div>
+        </div>
+
+
+    </div>
+{% endblock %}

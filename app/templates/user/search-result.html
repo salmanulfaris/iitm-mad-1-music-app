@@ -1,0 +1,96 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Home {% endblock %}
+
+
+{% block content %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="clearfix">
+                    <div class="float-left">
+                        <h1 class="text-2xl mt-2">Search Results : </h1>
+                    </div>
+                    <div class="float-right">
+                        <form action="{{ url_for('main.search') }}">
+                            <div class="inline-block">
+                                <label for="">Rating</label>
+                                <select name="rating" id="" class="form-control">
+                                    <option value="">--</option>
+                                    {% for i in range(1,6) %}
+                                        <option {{ 'selected' if request.args.get('rating') == i|string else '' }}
+                                                value="{{ i }}">{{ i }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-sm btn-info">Filter</button>
+                            </div>
+                            <div class="inline-block mt-3">
+                                <input type="hidden" name="query" value="{{ request.args.get('query') }}">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <h1 class="text-lg font-weight-medium mt-3">Result in Songs:</h1>
+                <ul class="list-group mt-2">
+                    {% for song in song_result %}
+                        <div class="list-group-item song-list flex justify-between gap-2 px-1 py-1">
+                            <div class="w-10 h-10 bg-cover rounded-sm"
+                                 style="background-image: url('{{ url_for('main.serve_file',folder='tsong',file=song.thumbnail) }}')">
+                                <img src="" alt="">
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-medium">
+                                    <a href="{{ url_for('main.play_song',song_id=song.id) }}">
+                                        {{ song.title }}
+                                    </a>
+                                </h3>
+                                {{ song.artist.name }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </ul>
+                <h1 class="text-lg font-weight-medium mt-3">Result in Albums:</h1>
+                <ul class="list-group mt-2">
+                    {% for album in albums_result %}
+                        <div class="list-group-item song-list flex justify-between gap-2 px-1 py-1">
+                            <div class="w-10 h-10 bg-cover rounded-sm bg-yellow-300"
+                                 style="background-image: url('{{ url_for('main.serve_file',folder='talbum',file=album.thumbnail) }}')">
+                                <img src="" alt="">
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-medium">
+                                    <a target="_blank" href="{{ url_for('main.view_album',aid=album.album_id) }}">
+                                        {{ album.album_name }}
+                                    </a>
+                                </h3>
+                                {{ album.creator.name }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </ul>
+
+
+                <h1 class="text-lg font-weight-medium mt-3">Result in Artists:</h1>
+                <ul class="list-group mt-2">
+                    {% for creator in artists_result %}
+                        <div class="list-group-item song-list flex justify-between gap-2 px-1 py-1">
+                            <div class="w-10 h-10 bg-cover rounded-sm"
+                                 style="background-image: url('{{ url_for('main.serve_file',folder='tuser',file=creator.profile_photo_file) }}')">
+                                <img src="" alt="">
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-medium">
+                                    <a target="_blank" href="{{ url_for('creator.profile',creator_id=creator.id) }}">
+                                        {{ creator.name }}
+                                    </a>
+                                </h3>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

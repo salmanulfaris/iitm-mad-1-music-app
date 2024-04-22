@@ -1,0 +1,45 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Login Page {% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-4 drop-shadow-md border rounded bg-white">
+            <div class="px-2 py-4">
+                <h3 class="text-center mt-2 text-3xl font-semibold">Welcome
+                    to {% include('layout/logo.html') %}</h3>
+                <p class="mt-3 text-xl">User Login</p>
+                {% include('layout/flash.html') %}
+                <form action="{{ url_for('main.login_post') }}" method="post">
+                    <div class="form-floating mt-3">
+                        <label for="email">Email address</label>
+                        <input type="email" class="form-control" id="email" name="email"  placeholder="Email">
+                    </div>
+
+                    <div class="form-floating mt-3">
+                        <label for="password">Password</label>
+                        <input type="password" class="form-control" id="password" name="password"  placeholder="Password">
+                    </div>
+                    <div class="mt-2 d-block ">
+                        <button class="btn btn-primary btn-block"> Login</button>
+                    </div>
+                    <hr class="border-2 mt-5">
+                    <p class="text-center mt-3">Don't have an account ?</p>
+                    <div class="mt-2 d-grid">
+                        <a class="btn btn-secondary btn-block" href="{{ url_for('main.register') }}"><i
+                                class="bi bi-person-add"></i> Register</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="flex content-center items-center text-black tracking-wider h-full p-5">
+                <h1 class="text-left text-3xl italic">"Music is the divine way to tell beautiful, poetic things to
+                    the
+                    heart."</h1>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

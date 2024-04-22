@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tune Flow | {% block title %}{% endblock %} </title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap2.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/misc.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+</head>
+
+<body class="h-screen  ">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-white border-b py-3">
+    <div class="container-fluid">
+        <a class="navbar-brand text-teal-900 font-medium text-2xl" href="/">
+            {% include('layout/logo.html') %}
+        </a>
+        {% if  current_user.is_authenticated %}
+            <div>
+                <form action="{{ url_for('main.search') }}">
+                    <input type="search" id="search_value" name="query" placeholder="Search Song, Artists, Album"
+                           value="{{ request.args.get('query') or '' }}"
+                           class="border-2  border-black border-solid rounded-3xl py-2 px-3 w-96"/>
+                </form>
+            </div>
+        {% endif %}
+
+        <ul>
+            {% if  current_user.is_authenticated %}
+                <li class="inline-block px-2"><a href="{{ url_for('main.index') }}">Home</a></li>
+                {% if current_user.user_type != 'admn' %}
+                    <li class="inline-block px-2"><a class="text-yellow-500" href="{{ url_for('creator.home') }}">Creator
+                        Studio</a></li>
+                    <li class="inline-block px-2"><a href="{{ url_for('main.all_playlists') }}">Playlists</a></li>
+                {% else %}
+                    <li class="inline-block px-2"><a class="text-red-500" href="{{ url_for('admin.console') }}">Admin
+                        Console</a></li>
+                {% endif %}
+
+                <li class="inline-block px-2"><a href="{{ url_for('main.profile') }}">Profile</a></li>
+                <li class="inline-block px-2"><a href="{{ url_for('main.logout') }}">Log Out</a></li>
+            {% else %}
+                <li class="inline-block px-2"><a href="{{ url_for('main.register') }}">Register</a></li>
+                <li class="inline-block px-2"><a href="{{ url_for('admin.login') }}">Admin Login</a></li>
+            {% endif %}
+        </ul>
+    </div>
+
+</nav>
+<div>
+    {% block content %}
+    {% endblock %}
+</div>
+
+{% block scripts %}
+{% endblock %}
+</body>
+</html>

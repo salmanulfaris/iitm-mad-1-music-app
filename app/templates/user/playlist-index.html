@@ -1,0 +1,205 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Home {% endblock %}
+
+
+{% block content %}
+    <div class="header w-full h-36 bg-no-repeat bg-cover bg-top hover:bg-blend-hard-light "
+         style="background-image: url('{{ url_for('static',filename='img/bg-img4.jpg') }}');">
+        <div class="container">
+            <h1 class="text-3xl text-center text-white pt-5 font-bold">
+                My Playlists
+            </h1>
+        </div>
+    </div>
+    <div class="container mt-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-3">
+                <div class="clearfix">
+                    <div class="float-right">
+                        <a href="{{ url_for('main.create_playlist') }}" class="btn btn-sm btn-outline-success"><i
+                                class="bi bi-plus"></i> New Playlist</a>
+                    </div>
+                    <div class="float-left">
+
+                        <h4 class="text-2xl mb-2">My Playlists</h4>
+                    </div>
+                </div>
+                <div class="list-group">
+                    {% for playlist in playlists %}
+                        <a href="?active={{ playlist.playlist_id }}"
+                           class="list-group-item list-group-item-action {% if (request.args.get('active')|int) ==playlist.playlist_id %} active  {% endif %}">
+                            {{ playlist.playlist_name }}
+                            <span class="badge badge-primary badge-pill">{{ playlist.songs | length }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="clearfix mb-3">
+                    <div class="float-left">
+                        <button type="button" onclick="playAllSong()" class="btn btn-sm btn-warning text-black"><i
+                                class="bi bi-play"></i> Play All
+                        </button>
+                        <button type="button" onclick="playShuffle()" class="btn btn-sm btn-outline-info"><i
+                                class="bi bi-shuffle"></i> Shuffle Play
+                        </button>
+                        <button onclick="nextSong()" class="btn btn-sm btn-success"><i class="bi bi-fast-forward"></i> Next
+                        </button>
+                    </div>
+                </div>
+
+                {% if selected_playlist | length > 0 %}
+                    <p class="mb-1">{{ selected_playlist[0].parent.playlist_name }} Songs : </p>
+                    <ul class="list-group">
+                        {% for play_item in selected_playlist %}
+
+                            {% if  play_item.song.is_active %}
+                                <div class="list-group-item song-list flex justify-between gap-2 px-3"
+                                     data-url="{{ url_for('main.serve_file',file=(play_item.song.file_path if play_item.song.file_path else ''),folder='song') }}"
+                                     data-lyrics="{{ play_item.song.lyrics }}"
+                                     data-id="{{ play_item.song.id }}">
+                                    <div class="w-16 h-16 bg-cover rounded-sm"
+                                         style="background-image: url('{{ url_for('main.serve_file',folder='tsong',file=play_item.song.thumbnail) }}')">
+                                        <img src="" alt="">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-medium">
+                                            <a href="{{ url_for('main.play_song',song_id=play_item.song.id) }}">
+                                                {{ play_item.song.title }}
+                                            </a>
+                                        </h3>
+                                        <a class="text-sm" href="{{ url_for('creator.profile',creator_id=play_item.song.artist.id) }}">{{ play_item.song.artist.name }}</a>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-primary play-btn"><i class="bi bi-play"></i></button>
+                                    </div>
+                                </div>
+                            {% else %}
+
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="py-14 text-center border rounded-sm">
+                        <i class="bi bi-music-note text-3xl text-danger"></i>
+                        <p class="text-danger font-bold">No Songs Found in this playlist:)</p>
+                        <a href="/" class="text-success underline">Explore and Save Fav Music</a>
+                    </div>
+                {% endif %}
+                <audio id="music-player" class="d-none" preload controls>
+                    <source src="">
+                </audio>
+
+            </div>
+                    <div class="col-lg-5">
+                <h2 class="text-xl font-bold">Lyrics : </h2>
+                <p class="whitespace-pre text-sm " style="overflow-x: scroll" id="lyrics-body"></p>
+            </div>
+
+        </div>
+
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        var currentPlayingSrc;
+        var currentPlayingDuration;
+
+        var audio = $("#music-player");
+        var playSrcQueue = [];
+
+        $(".play-btn").click(function () {
+            let parent = $(this).parents('.list-group-item')
+            let url = parent.data('url');
+            if (currentPlayingSrc === url) {
+                if (audio[0].paused) {
+                    $(this).addClass('btn-success').html('<i class="bi bi-pause"></i>')
+                    audio[0].play()
+                } else {
+                    $(this).removeClass('btn-success').html('<i class="bi bi-play"></i>')
+                    audio[0].pause()
+                }
+            } else {
+                playSong(url)
+            }
+            $.post('{{ url_for("main.log_song_play") }}', {song_id: parent.data('id')})
+        });
+
+        audio[0].addEventListener("timeupdate", function () {
+            if (this.duration === this.currentTime) {
+                nextSong()
+            }
+        });
+
+        function resetAllSong() {
+            $('.list-group-item.song-list').each(function () {
+                $(this).find('.play-btn').removeClass('btn-success').html('<i class="bi bi-play"></i>')
+            })
+        }
+
+        function nextSong() {
+            if (playSrcQueue.length > 1) {
+                playSrcQueue.shift()
+                playSong(playSrcQueue[0])
+            } else {
+                playAllSong();
+            }
+        }
+
+        function playAllSong() {
+            playSrcQueue = []
+            $('.list-group-item.song-list').each(function () {
+                playSrcQueue.push($(this).data('url'));
+            })
+            playSong(playSrcQueue[0])
+        }
+
+        function playShuffle() {
+            playSrcQueue = []
+            $('.list-group-item.song-list').each(function () {
+                playSrcQueue.push($(this).data('url'));
+            })
+            playSrcQueue = shuffle(playSrcQueue)
+            playSong(playSrcQueue[0])
+
+        }
+
+        function playSong(url) {
+            currentPlayingSrc = url;
+            currentPlayingDuration = audio[0].duration
+            audio.find('source').attr('src', url);
+
+            {#audio[0].pause();#}
+            audio[0].load();
+            audio[0].oncanplaythrough = audio[0].play();
+
+            resetAllSong();
+
+            $('.list-group-item.song-list').each(function () {
+
+
+                if ($(this).data('url') == url) {
+                    let lyrics = $(this).data('lyrics')
+                    console.log(lyrics)
+                    $("#lyrics-body").html(lyrics)
+                    $(this).find('.play-btn').addClass('btn-success').html('<i class="bi bi-pause"></i>')
+                }
+            });
+        }
+
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex > 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+    </script>
+{% endblock %}

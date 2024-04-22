@@ -1,0 +1,84 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+    <div class="header w-full h-36 bg-white bg-no-repeat bg-cover bg-top hover:bg-blend-hard-light transition-all delay-1000 "
+         style="background-image: url('{{ url_for('static',filename='img/bg-img4.jpg') }}');">
+        <div class="container">
+            <h1 class="text-3xl text-center text-white pt-5 font-black ">
+                Profile
+            </h1>
+        </div>
+    </div>
+    <div class="container mt-3 pb-10">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="w-full">
+                    <div class="w-40 h-40 border-2 rounded-2xl bg-cover bg-no-repeat "
+                         style="background-image: url('{{ url_for('main.serve_file',file=user.profile_photo_file,folder='tuser') }}')"></div>
+                </div>
+                <h1 class="text-xl mt-3">My Profile</h1>
+                {% include('layout/flash.html') %}
+                <hr class="my-2">
+                <p>Full Name : {{ user.name }}</p>
+                <hr class="my-2">
+                <p>Email : {{ user.email }}</p>
+
+                <hr class="my-2">
+                <p>User Type : <span class="badge bg-success">
+                    {% if user.user_type == 'user' %} User {% elif user.user_type == 'crtr' %} Creator {% else %}
+                        Admin {% endif %}
+                </span></p>
+                <hr class="my-2">
+                <fieldset class="mt-5">
+                    <h5 class="text-xl">Change Password:</h5>
+                    <hr class="my-2">
+                    <form action="{{ url_for('main.change_password') }}" method="post">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <label>Current Password</label>
+                                <input type="password" name="current_password" class="form-control" required>
+                            </div>
+                            <div class="col-lg-4">
+                                <label>New Password</label>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                            <div class="col-lg-4">
+                                <label>Confirm Password</label>
+                                <input type="password" name="verify_password" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button class="btn btn-primary mt-2">Change</button>
+                        </div>
+
+                    </form>
+
+                    <h5 class="text-xl">Update Profile Picture:</h5>
+                    <hr class="my-2">
+                    <form action="{{ url_for('main.change_profile_picture') }}" method="post"
+                          enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <label>Profile Picture</label>
+                                <input type="file" name="profile_picture" accept="image/*" class="form-control"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button class="btn btn-primary mt-2">Upload</button>
+                        </div>
+
+                    </form>
+                </fieldset>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+
+{% endblock %}

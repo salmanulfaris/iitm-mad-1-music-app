@@ -1,0 +1,154 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+    <div class="header w-full h-36 bg-no-repeat bg-cover bg-top hover:bg-blend-hard-light "
+         style="background-image: url('{{ url_for('static',filename='img/bg-img4.jpg') }}');">
+        <div class="container">
+            <h1 class="text-3xl text-center text-white pt-5 font-bold">
+                Admin Console
+            </h1>
+        </div>
+    </div>
+    <div class="container mt-3">
+        <div class="row justify-content-center">
+            <div class="col-lg-2 border-2 py-4 rounded-lg">
+                <h3>Total Creators</h3>
+                <h1 class="text-xl font-bold">{{ creators | length }}</h1>
+            </div>
+            <div class="col-lg-2 border-2 py-4 rounded-lg">
+                <h3>Total Users</h3>
+                <h1 class="text-xl font-bold">{{ users | length }}</h1>
+            </div>
+            <div class="col-lg-2 border-2 py-4 rounded-lg">
+                <h3>Total Songs</h3>
+                <h1 class="text-xl font-bold">{{ songs | length }}</h1>
+            </div>
+        </div>
+        <canvas id="songPlaysChart" width="100" height="20"></canvas>
+        <table class="table table-bordered mt-3">
+            <thead class="table-light">
+            <tr>
+                <th>Creator</th>
+                <th>Total Songs</th>
+                <th>Total Albums</th>
+                <th>Account Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                {% for creator in creators %}
+                    <td>{{ creator.name }}</td>
+                    <td>{{ creator.songs | length }}</td>
+                    <td>{{ creator.albums | length }}</td>
+                    <td>
+                        {% if creator.is_allowed_to_create %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-danger">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if creator.is_allowed_to_create %}
+                            <a class="btn btn-danger" href="{{ url_for('admin.add_to_blacklist',user_id=creator.id) }}">Add
+                                to Black List</a>
+                        {% else %}
+                            <a class="btn btn-success"
+                               href="{{ url_for('admin.add_to_whitelist',user_id=creator.id) }}">Add
+                                to White List</a>
+                        {% endif %}
+                    </td>
+            </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <table class="table table-bordered mt-3">
+            <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Song Name</th>
+                <th>Artist</th>
+                <th>Album</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                {% for song in songs %}
+                    <td>{{ loop.index }}</td>
+                    <td>{{ song.title }}</td>
+                    <td>{{ song.artist.name }}</td>
+                    <td>{{ song.album.album_name }}</td>
+                    <td>
+                        {% if song.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-danger">Flagged</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('main.play_song',song_id=song.id) }}" class="btn btn-success btn-sm"><i
+                                class="bi bi-play "></i> Play Song</a>
+                        {% if song.is_active %}
+                            <a class="btn btn-warning btn-sm"
+                               onclick="return confirm('Song will be flagged, are you sure ?')"
+                               href="{{ url_for('admin.flag_song',song_id=song.id) }}"><i class="bi bi-flag "></i> Flag</a>
+                        {% else %}
+                            <a class="btn btn-warning btn-sm"
+                               href="{{ url_for('admin.unflag_song',song_id=song.id) }}">Unflag</a>
+                        {% endif %}
+
+                        <a href="{{ url_for('creator.delete_song',song_id=song.id) }}"
+                           onclick="return confirm('Song will be deleted permanently, are you sure ?')"
+                           class="btn btn-sm btn-danger"><i class="bi bi-trash "></i> Delete Song</a>
+                    </td>
+            </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Use JavaScript to populate the Chart.js chart
+        var ctx = document.getElementById('songPlaysChart').getContext('2d');
+        var chartData = {
+            labels: {{ song_ids | tojson }},
+            datasets: [{
+                label: 'Number of Plays',
+                data: {{ song_counts | tojson }},
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                title: {
+                    display: true,
+                    text: 'Top trending songs in Last 24 Hours',
+                    font: {
+                        size: 16
+                    }
+                }
+            }
+            },
+
+        });
+    </script>
+
+{% endblock %}

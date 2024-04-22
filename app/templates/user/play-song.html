@@ -1,0 +1,209 @@
+{% extends "layout/base.html" %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+    <div class="header w-full h-36 bg-no-repeat bg-cover bg-top hover:bg-blend-hard-light "
+         style="background-image: url('{{ url_for('static',filename='img/bg-img4.jpg') }}');">
+        <div class="container">
+            <h1 class="text-3xl text-center text-white pt-5 font-bold">
+                {{ song.title }}
+            </h1>
+        </div>
+    </div>
+    <div class="container mt-3 pb-10">
+        {% if song.is_active %}
+
+            <div class="row justify-content-center">
+                <div class="col-lg-4">
+                    <div class="text-center">
+                        {% include('layout/flash.html') %}
+
+                        <div style="background:  url('{{ url_for('main.serve_file',file=song.thumbnail,folder='tsong') }}');background-size:contain;"
+                             class="w-40 h-40 bg-gray-800 mx-auto mb-2 rounded-tr-3xl rounded-bl-3xl "></div>
+                        <h2 class="text-3xl mb-3">{{ song.title }}</h2>
+
+
+                        {% if song.file_path %}
+                            <div class="progress mb-3 bg-yellow-300 h-2">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated " id="playhead"
+                                     role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+                                     style="width: 0%"></div>
+                            </div>
+
+                            <button class="btn btn-secondary" onclick="seek('-')" id="next-btn"><i
+                                    class="bi bi-skip-start-fill"></i></button>
+                            <button class="btn btn-lg btn-primary" id="play-pause-btn" data-song-id="{{ song.id }}"><i
+                                    class="bi bi-play-fill"></i></button>
+                            <button class="btn btn-secondary" onclick="seek('+')" id="next-btn"><i
+                                    class="bi bi-skip-end-fill"></i></button>
+
+                            <div class="flex d-block">
+                                <i class="bi bi-volume-up text-2xl"></i>
+                                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1"/>
+                            </div>
+                        {% endif %}
+                    </div>
+
+
+                    <div>
+                        {% if song.file_path %}
+                            <audio id="song">
+                                <source src="{{ url_for('main.serve_file',file=song.file_path,folder='song') }}"
+                                        type="audio/mpeg">
+                            </audio>
+                        {% else %}
+                            <audio src="" id="song"></audio>
+                        {% endif %}
+                    </div>
+
+                    {#       SONG INFO     #}
+                    <hr class="my-2">
+                    <p>Album : {{ song.album.album_name }}</p>
+                    <hr class="my-2">
+                    <p>Genre : {{ song.album.genre.genre_name }}</p>
+                    <hr class="my-2">
+                    <p>Language : {{ song.language.lang_name }}</p>
+                    <hr class="my-2">
+                    <p>Artist : <a class="text-primary" href="{{ url_for('creator.profile',creator_id=song.artist.id) }}">{{ song.artist.name }}</a></p>
+                    <hr class="my-2">
+                    <p>Average Rating : {{ average_rating }}</p>
+                    <hr class="my-2">
+                    <p>Total Plays : {{ song.get_total_plays() }}</p>
+                    <hr class="my-2">
+                    <p>Date Released : {{ song.release_year }}</p>
+                    <hr class="my-2">
+
+
+                    {#       RATE THE SONG     #}
+                    <p class="mt-4 mb-2">Rate the Song : </p>
+                    <div class="input-group flex w-full">
+                        {% for i in range(1,6) %}
+                            <button class="btn hover:scale-110 btn-{% if rating and rating.rating < i %}outline-{% endif %}danger rating-btn btn-sm mx-1"
+                                    data-song-id="{{ song.id }}" data-rating="{{ i }}"><i class="bi bi-star"></i>
+                            </button>
+                        {% endfor %}
+                    </div>
+
+
+                    {#       ADD TO PLAYLIST     #}
+                    <form action="{{ url_for('main.add_to_playlist') }}" method="post">
+                        <div class="flex mt-4 gap-3">
+                            <select name="playlist_id" class="form-control w-36">
+                                <option value="">--playlist--</option>
+                                {% for playlist in playlists %}
+                                    <option value="{{ playlist.playlist_id }}">{{ playlist.playlist_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="song_id" value="{{ song.id }}"/>
+                            <button class="btn btn-secondary"> Add to Playlist</button>
+                        </div>
+                    </form>
+
+
+                    {#      SHARE SOCIAL MEDIA       #}
+                    <a class="btn btn-success mt-3 " href="https://wa.me?text={{ wa_text }}" target="_blank" id="share">Share
+                        to Whatsapp</a>
+                </div>
+                <div class="col-lg-3">
+                    <h6 class="font-bold">Lyrics : </h6>
+                    <hr class="my-2"/>
+                    <p class="whitespace-pre text-sm text-gray-800">{{ song.lyrics }}</p>
+                </div>
+            </div>
+        {% else %}
+            <div class="p-5">
+                <h2 class="text-2xl">
+                    Song currently unavailable.
+                </h2>
+                <span class="text-danger">
+                    This song is flagged by admin as it is violating community/copyright policies.</span>
+                <br>
+                <a href="/" class="btn btn-primary mt-2">Go Home</a>
+            </div>
+        {% endif %}
+
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+
+        const audio = $("#song")[0]; // Get the audio element
+        let isRepeating = false;
+
+
+        function seek(x = '+') {
+            if (x == '+') {
+                audio.currentTime += 10;
+            } else {
+                audio.currentTime -= 10;
+            }
+        }
+
+
+        // Play/Pause Button
+        $("#play-pause-btn").click(function () {
+            if (audio.paused) {
+                audio.play();
+                $.post('{{ url_for("main.log_song_play") }}', {song_id: $("#play-pause-btn").data('song-id')})
+                $(this).html('<i class="bi bi-pause-fill"></i>');
+            } else {
+                audio.pause();
+                $(this).html('<i class="bi bi-play-fill"></i>');
+            }
+        });
+
+
+        const playhead = document.getElementById("playhead");
+        audio.addEventListener("timeupdate", function () {
+            const duration = this.duration;
+            const currentTime = this.currentTime;
+            const percentage = (currentTime / duration) * 100;
+            playhead.style.width = percentage + '%';
+        });
+
+
+        $("#repeat-btn").click(function () {
+            isRepeating = !isRepeating;
+            audio.loop = isRepeating;
+            $(this).toggleClass("active", isRepeating);
+        });
+
+        // Volume Slider
+        $("#volume-slider").on("input", function () {
+            audio.volume = $(this).val();
+        });
+
+
+        $('.rating-btn').click(function () {
+            const rating = $(this).data('rating');
+            const songId = $(this).data('song-id');
+
+
+            let url = "{{ url_for('main.rate_song',song_id=':sid',rating=':rte') }}";
+
+
+            url = url.replace(":sid", songId)
+            url = url.replace(":rte", rating)
+
+            if ($(this).hasClass('btn-danger')) {
+                $(this).removeClass('btn-danger').addClass('btn-outline-danger');
+            } else {
+                $(this).removeClass('btn-outline-danger').addClass('btn-danger');
+            }
+
+            // Set the state for all buttons with a lower or equal rating
+            $('.rating-btn:lt(' + rating + ')').removeClass('btn-outline-danger').addClass('btn-danger');
+            $('.rating-btn:gt(' + (rating - 1) + ')').removeClass('btn-danger').addClass('btn-outline-danger');
+
+            // Make an AJAX GET request
+            $.ajax({
+                type: 'GET',
+                url: url
+            });
+        });
+
+    </script>
+
+{% endblock %}
